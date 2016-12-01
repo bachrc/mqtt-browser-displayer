@@ -28,7 +28,7 @@
 
 <div class="container">
     <!-- Example row of columns -->
-    <div class="row sensor-list">
+    <div class="row" id="sensor-list">
         <div class="col-md-4">
             <div class="panel panel-info">
                 <div class="panel-heading">
@@ -64,13 +64,10 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
-<script src="../../dist/js/bootstrap.min.js"></script>
-<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-<script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
 <!--<script src="chat.js" charset="utf-8"></script> -->
 <script>
-    client = new Paho.MQTT.Client("172.19.0.2", 80, "Dessert");
+    client = new Paho.MQTT.Client("192.168.99.100", 8080, "Dessert");
 
     // set callback handlers
     client.onConnectionLost = onConnectionLost;
@@ -94,27 +91,46 @@
         }
     }
 
+    function formatOutput(message) {
+        return "Dessert";
+    }
+
     // called when a message arrives
     function onMessageArrived(message) {
         console.log(message);
-        results = JSON.parse(message.payloadString);
-
-        sensorName = results._getDestinationName().split("/")[1];
-
-        if((container = document.getElementById(sensorName)) === null) {
-            colMd = document.createElement("div");
+        var results = JSON.parse(message.payloadString);
+        console.log(results);
+        var sensorName = message._getDestinationName().split("/")[1];
+        var container = document.getElementById(sensorName);
+        if(container === null) {
+            var sensorList = document.getElementById("sensor-list");
+            var colMd = document.createElement("div");
             colMd.setAttribute("class", "col-md-4");
+            colMd.setAttribute("id", sensorName);
 
-            panel = document.createElement("div");
+            var panel = document.createElement("div");
             panel.setAttribute("class", "panel panel-info");
 
-            panelTitle = document.createElement("div");
+            var panelTitle = document.createElement("div");
+            panelTitle.setAttribute("class", "panel-heading");
+            panelTitle.innerHTML = "<h3 class=\"panel-title\">" + sensorName + "</h3>";
 
+            panel.appendChild(panelTitle);
 
-            text = document.createTextNode(results.value + " : " + results.type);
-            toDisplay.appendChild(text);
-            document.getElementById("messages").appendChild(toDisplay);
+            var panelBody = document.createElement("div");
+            panelBody.setAttribute("class", "panel-body sensor-value");
+
+            panel.appendChild(panelBody);
+
+            colMd.appendChild(panel);
+
+            sensorList.appendChild(colMd);
+
+            container = colMd;
         }
+        var pBody = container.getElementsByClassName("sensor-value")[0];
+
+        pBody.innerHTML = formatOutput(message);
     }
 </script>
 </body>
